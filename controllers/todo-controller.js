@@ -1,26 +1,40 @@
-const Todos = require("../models/Todos")
+require("dotenv").config();
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const KEY = "secret";
 
 module.exports = {
-  getAllTodo: (req, res) => {
-    res.json({
-      message: "berhasil mendapatkan data todos",
-      data: Todos
-    })
-  }, 
+  login: async (req, res) => {
+    const userLogin = req.body;
 
-  getTodoById: (req, res) => {
+    try {
+      const user = await User.findOne({ email: userLogin.email });
+      if (!user) throw new Error("invalid user");
 
-  }, 
+      console.log(user.password, userLogin.password);
+      if (user.password !== userLogin.password) throw new Error("invalid user");
 
-  addTodo: (req, res) => {
+      const token = jwt.sign({ id: user._id, email: user.email }, KEY);
 
-  }, 
+      res.json({
+        message: "login successfull",
+        userId: user._id,
+        token,
+      });
+    } catch (error) {
+      res.json(error.message);
+    }
+  },
 
-  editTodoById: (req, res) => {
+  regis: (req, res) => {
+    const userRegis = req.body;
 
-  }, 
-
-  deleteTodoById: (req, res) => {
-
-  }, 
-}
+    User.create(userRegis)
+      .then((user) => {
+        res.json(user);
+      })
+      .catch((err) => {
+        res.json(err.message);
+      });
+  },
+};
